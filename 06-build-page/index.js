@@ -1,118 +1,134 @@
-const fs = require("fs");
-const path = require("path");
+const fs = require('fs');
+const path = require('path');
+const projectDist = path.join(__dirname, 'project-dist');
+const template = path.join(__dirname, 'template.html');
+const styles = path.join(__dirname, 'styles');
+const targetIndex = path.join(projectDist, 'index.html');
+const tarAssets = path.join(projectDist, 'assets');
+const assets = path.join(__dirname, 'assets');
+const targetStyle = path.join(projectDist, 'style.css');
+const components = path.join(__dirname, 'components');
+let trueMessage = false;
+let message = '';
+let trueMessage2 = false;
 
-// create folder project-dist
-fs.mkdir(__dirname + "/project-dist", (err) => {
-  return err;
-});
+let countOfTable=0;
 
-// read each files in source folder
-let styles = [];
-fs.readdir(`${__dirname}/styles`, (err, styleFiles) => {
-  fs.open(`${__dirname}/project-dist/style.css`, "w", (err, data) => {
-    const targetFile = `${__dirname}/project-dist/style.css`;
-    const writeStream = fs.createWriteStream(targetFile, "utf-8");
-
-    styleFiles.forEach((file) => {
-      mergeStyle(file);
-    });
-
-    setTimeout(() => {
-      const allStylesString = styles.reduce((acc, el) => {
-        acc += el;
-        return acc;
-      }, "");
-      writeStream.write(allStylesString);
-    }, 1000);
-  });
-});
-
-function mergeStyle(file) {
-  const sourceFile = `${__dirname}/styles/${file}`;
-  const readStream = fs.createReadStream(sourceFile);
-  readStream.on("data", (chunk) => {
-    const newStyleArr = [];
-    newStyleArr.push(chunk.toString());
-    styles.push(chunk.toString());
-  });
-
-  readStream.on("error", (err) => err);
-  return file;
-}
-
-// create folder
-fs.mkdir(`${__dirname}/project-dist/assets`, (err) => {
-  return err;
-});
-
-//copy assets folder
-fs.readdir(`${__dirname}/assets`, (err, data) => {
-  data.forEach((folder) => {
-    // folder =  folders in assets folder
-    makeDir(folder);
-
-    fs.readdir(`${__dirname}/assets/${folder}`, (err, data) => {
-      // data = files which situated in folder
-      data.forEach((file) => {
-        if (file !== null) {
-          // copy each file from folder to project-dist folder
-          fs.copyFile(
-            `${__dirname}/assets/${folder}/${file}`,
-            `${__dirname}/project-dist/assets/${folder}/${file}`,
-            (err) => {
-              return err;
-            }
-          );
+fs.readFile(template, 'utf-8', (err, data) => {
+    if (err) {
+        console.log('err\x1b[35m', err);
+    }
+    fs.writeFile(targetIndex, data, 'utf-8', (err) => {
+        if (err) {
+            console.log('err\x1b[35m', err);
         }
-      });
+    })
+    fs.readFile(targetIndex, 'utf-8', (err, dataOftargetIndex) => {
+        if (err) {
+            console.log('err\x1b[35m', err);
+        }
+        fs.readdir(components, (err, componentData) => {
+            if (err) {
+                console.log('err\x1b[35m', err);
+            }
+            message += '\x1b[37m\nCopy files\t|';
+            componentData.forEach(fileOfIndex => {
+                let pathForIndex = path.join(components, fileOfIndex)
+                let createNameOfHtml = fileOfIndex.split('.')[0]
+                fs.readFile(pathForIndex, 'utf-8', (err, dataOfHtml) => {
+                    if (err) {
+                        console.log('err\x1b[35m', err);
+                    }
+                    dataOftargetIndex = dataOftargetIndex.replace(new RegExp(`{{${createNameOfHtml}}}`, 'g'), dataOfHtml)
+                    fs.writeFile(targetIndex, dataOftargetIndex, 'utf-8', (err) => {
+                        if  (trueMessage == false){
+                        message += '\x1b[37m\nAdd on HTML\t|';  trueMessage = true}
+                        message += ` \x1b[34m${createNameOfHtml} \x1b[37m|`;
+                        if (err) {
+                            console.log('err\x1b[35m', err);
+                        }
+                    })
+
+                })
+            })
+        })
     });
-  });
-});
+})
 
-function makeDir(dir) {
-  return fs.mkdir(
-    `${__dirname}/project-dist/assets/${dir}`,
-    { recursive: true },
-    (err) => err
-  );
-}
 
-const myReadStreamTemplate = fs.createReadStream(
-  path.join(__dirname, "/template.html")
-);
+fs.readdir(styles, (err, files) => {
+    fs.mkdir(tarAssets, (err) => {
+      fs.mkdir(projectDist, err => {
+        message += `\x1b[37mIf no dir, \t|\x1b[36m${projectDist}\x1b[37m| \x1b[33mi am create it!\x1b[37m\n`;
+        message += `\x1b[37mIf no dir, \t|\x1b[36m${tarAssets}\x1b[37m| \x1b[33mi am create it!\x1b[37m\n`;
+        })
+    })
+    if (err) {
+        console.log('err\x1b[35m', err);
+    }
+    files.forEach(file => {
+        let fileOfCss = path.extname(file).slice(1);
+        if(fileOfCss === 'css') {
+            let fileOfStyle = path.join(styles, file);
+            fs.readFile(fileOfStyle, 'utf-8', (err, data) => {
+                if (err) {
+                    console.log('err\x1b[35m', err);
+                }
+                fs.appendFile(targetStyle, data+'\n', (err) => {
+                    if  (trueMessage2 == false){
+                        message += '\x1b[37mSplit CSS files |';
+                        trueMessage2 = true
+                    }
 
-let d;
-let myWriteStream;
-myReadStreamTemplate.on("data", (templateData) => {
-  d = templateData.toString();
+                    message += ` \x1b[33m${file} \x1b[37m|`;
 
-  //create index.html
-  fs.open(__dirname + "/project-dist/index.html", "w", (err, data) => {
-    myWriteStream = fs.createWriteStream(
-      __dirname + "/project-dist/index.html"
-    );
+                    if (err) {
+                        console.log('err\x1b[35m', err);
+                    }
+                })
+            })
+        }
+    })
+})
 
-    //read Components
-    fs.readdir(path.join(__dirname, "/components"), (err, components) => {
-      components.forEach((component) => {
-        const myReadStreamComponents = fs.createReadStream(
-          path.join(__dirname, "/components", component)
-        );
 
-        myReadStreamComponents.on("data", (chunk) => {
-          if (component == "header.html") {
-            d = d.toString().replace("{{header}}", chunk.toString());
-          } else if (component == "articles.html") {
-            d = d.toString().replace("{{articles}}", chunk.toString());
-          } else if (component == "footer.html") {
-            d = d.toString().replace("{{footer}}", chunk.toString());
-          }
-        });
-      });
-    });
-  });
-});
-
-setTimeout(() => {
-  myWriteStream.write(d);
-}, 1000);
+fs.readdir(assets, (err, dates_) => {
+    if (err) {
+        console.log('err\x1b[35m', err);
+    }
+    dates_.forEach(files => {
+        let fileOfAssets = path.join(tarAssets, files);
+        fs.mkdir(fileOfAssets, {recursive: true} , err => {
+            if (err) {
+                console.log('err\x1b[35m', err);
+            }
+        })
+        let fileForAssets = path.join(assets, files);
+        fs.readdir(fileForAssets, (err, dataForAssets) => {
+            if (err) {
+                console.log('err\x1b[35m', err);
+            }
+            dataForAssets.forEach(fileCopyAssets => {
+                let full = path.join(fileForAssets, fileCopyAssets)
+                fs.readFile(full, 'utf-8', (err, data) => {
+                    if (err) {
+                        console.log('err\x1b[35m', err);
+                    }
+                    let dataOfAssetsFile = path.join(fileOfAssets, fileCopyAssets)
+                    fs.appendFile(dataOfAssetsFile, data, (err) => {
+                    countOfTable +=1;
+                    if (countOfTable==5) {
+                        message +=`\n\t\t|`
+                        countOfTable=0;
+                    }
+                        message +=` \x1b[32m${fileCopyAssets} \x1b[37m|`
+                        if (err) {
+                            console.log('err\x1b[35m', err);
+                        }
+                    })
+                })
+            })
+        })
+    })
+})
+const process = require('process');
