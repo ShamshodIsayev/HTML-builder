@@ -1,8 +1,8 @@
 const fs = require("fs");
-const source = path.join(__dirname, "files");
-const target = path.join(__dirname, "files-copy");
 const promises = fs.promises;
 const path = require("path");
+const source = path.join(__dirname, "files");
+const target = path.join(__dirname, "files-copy");
 let res = ``;
 let res2 = "";
 promises
