@@ -1,34 +1,26 @@
-const fs = require("fs/promises");
-const { readdir, stat } = require("fs/promises");
+const process = require("process");
 const path = require("path");
-const filePath = path.join(__dirname, "secret-folder");
-
-async function init() {
+const fs = require("fs");
+const { readdir } = require("fs/promises");
+let result = ``;
+async function showFile() {
   try {
-    const data = await readdir(filePath);
-    // const state = await stat(__filename)
-    // console.log(state.size);
-
-    data.forEach(async (file) => {
-      const fileExt = path.extname(filePath + file);
-      const fileExtension = fileExt.slice(1);
-      const fileName = file.slice(0, file.indexOf("."));
-      const fileSize = await getSizeInKBytes(filePath + "/" + file);
-
-      console.log(`${fileName} - ${fileExtension} - ${fileSize}kb`);
-    });
-  } catch (error) {
-    console.log(error);
+    for (const file of await readdir(path.join(__dirname, "/secret-folder"))) {
+      const files = path.join(__dirname, "/secret-folder", file);
+      fs.stat(files, (err, date) => {
+        if (err) {
+          result += `\x1b[31mEror!\n${err}`;
+        } else if (!date.isDirectory()) {
+          const extName = path.extname(files);
+          result += `\n\x1b[34m\x1b[32m${path.basename(files, extName)}\t\t\x1b[34m\x1b[32m${extName.substring(1)}\t\t\x1b[34m\x1b[32m${date.size} bytes\t\t\x1b[34m`;
+        }
+      });
+    }
+  } catch (err) {
+    result += `\x1b[31mEror!\n${err}`;
   }
 }
-init();
-
-async function getSizeInKBytes(path) {
-  try {
-    const data = await stat(path);
-    return data.size / 125;
-  } catch (error) {
-    throw error;
-    console.log(error);
-  }
-}
+showFile();
+process.on("beforeExit", () => {
+  console.log(result);
+});
