@@ -1,17 +1,39 @@
 const fs = require("fs");
+const source = path.join(__dirname, "files");
+const target = path.join(__dirname, "files-copy");
+const promises = fs.promises;
 const path = require("path");
-const readLine = require("readline");
-const fileDir = path.join(__dirname, "files");
-const newFilePath = path.join(__dirname, "files-copy");
-
-fs.readdir(fileDir, (err,files) => {
-  files.forEach(file => {
-    fs.copyFile(fileDir+'/'+file, newFilePath+'/'+file, (err) => {
-});
+let res = ``;
+let res2 = "";
+promises
+  .mkdir(target)
+  .then(() => {
+    console.log("files created");
   })
-})
+  .catch(() => {
+    console.log("files were in your directory");
+  });
 
-fs.mkdir(newFilePath, { recursive: true }, (err) => {
-  console.log("create");
+res += "\n";
+fs.readdir(source, (err, file) => {
+  let check = 0;
+  console.log(`copying-files ...`);
+  file.forEach((current, i) => {
+    fs.copyFile(`${source}/${current}`, `${target}/${current}`, (err) => {
+      if (!err) {
+        check++;
+        res += ` ${current}  \n`;
+      } else {
+        console.log("err\x1b[35m", err);
+      }
+    });
+  });
 });
-console.log(newFilePath);
+
+const process = require("process");
+process.on("beforeExit", () => {
+  res2 += `\n please run for 1 more time`;
+  res2 += res;
+  res2 += `thank you!\n`;
+  console.log(res2);
+});
